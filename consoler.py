@@ -2,7 +2,7 @@
 from gettext import gettext as _
 import getpass
 
-from file_source import PrimesError, User
+from session import PrimesError, Session
 
 
 def ask_username(prompt):
@@ -23,7 +23,7 @@ def ask_register_user():
         username = ask_username(create_username_prompt())
         password = ask_password()
         try:
-            User.register(username, password)
+            Session.register(username, password)
             break
         except PrimesError as error:
             print(error)
@@ -39,11 +39,24 @@ def login_user():
             continue
         password = ask_password()
         try:
-            user = User(username, password)
+            session = Session(username, password)
             break
         except PrimesError as error:
             print(error)
-    return user
+    return session
+
+
+def ask_message():
+    return input(_("Message? "))
+
+
+def ask_send_message(user):
+    receiver = ask_username(_('Receiver? '))
+    message = ask_message()
+    try:
+        user.send_message(receiver, message)
+    except PrimesError as error:
+        print(error)
 
 
 user = login_user()

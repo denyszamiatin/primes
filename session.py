@@ -1,15 +1,20 @@
 # coding: utf-8
 import hashlib
 import fcntl
-import time
+import os
 from gettext import gettext as _
 
 
 class PrimesError(Exception):
     pass
 
+DATABASE_DIR = 'data'
+if not os.path.isdir(DATABASE_DIR):
+    os.makedirs(DATABASE_DIR)
+os.chdir(DATABASE_DIR)
 
-class User:
+
+class Session:
     USERNAME_LENGTH = 3
     USER_FILENAME = 'users.txt'
     USER_PASSWORD_SEPARATOR = ':'
@@ -17,9 +22,9 @@ class User:
     @staticmethod
     def get_user_credentials(name):
         try:
-            with open(User.USER_FILENAME, 'r') as user_file:
+            with open(Session.USER_FILENAME, 'r') as user_file:
                 for line in user_file:
-                    if line.split(User.USER_PASSWORD_SEPARATOR)[0] == name:
+                    if line.split(Session.USER_PASSWORD_SEPARATOR)[0] == name:
                         return line[:-1]
         except FileNotFoundError:
             pass
@@ -31,16 +36,20 @@ class User:
 
     @staticmethod
     def register(name, password):
-        User.validate_name(name) and User.validate_password(password)
-        with open(User.USER_FILENAME, 'a') as user_file:
+        Session.validate_name(name) and Session.validate_password(password)
+        with open(Session.USER_FILENAME, 'a') as user_file:
             fcntl.flock(user_file, fcntl.LOCK_EX)
-            user_file.write(User.USER_PASSWORD_SEPARATOR.join([name, User.encrypt(password)]) + '\n')
+            user_file.write(
+                Session.USER_PASSWORD_SEPARATOR.join(
+                    [name, Session.encrypt(password)]
+                ) + '\n'
+            )
 
     @staticmethod
     def validate_name(name):
-        if len(name) < User.USERNAME_LENGTH or '.' in name:
+        if len(name) < Session.USERNAME_LENGTH or '.' in name:
             raise PrimesError(_('Invalid name'))
-        if User.get_user_credentials(name):
+        if Session.get_user_credentials(name):
             raise PrimesError(_('Existing name'))
 
     @staticmethod
@@ -49,11 +58,11 @@ class User:
             raise PrimesError(_('Empty password'))
 
     def __init__(self, name, password):
-        user = User.get_user_credentials(name)
+        user = Session.get_user_credentials(name)
         if not user:
             raise PrimesError(_('Invalid username'))
-        name, encrypted_password = user.split(User.USER_PASSWORD_SEPARATOR)
-        if encrypted_password != User.encrypt(password):
+        name, encrypted_password = user.split(Session.USER_PASSWORD_SEPARATOR)
+        if encrypted_password != Session.encrypt(password):
             raise PrimesError(_('Invalid password'))
         self.name = name
 
