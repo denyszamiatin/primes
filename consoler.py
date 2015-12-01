@@ -14,9 +14,13 @@ def ask_password():
     return getpass.getpass(_("Password"))
 
 
+def create_username_prompt(message=''):
+    return _("Username ({} is default{})".format(getpass.getuser(), message))
+
+
 def ask_register_user():
     while True:
-        username = ask_username(_("Username ({} is default)".format(getpass.getuser())))
+        username = ask_username(create_username_prompt())
         password = ask_password()
         try:
             User.register(username, password)
@@ -27,7 +31,9 @@ def ask_register_user():
 
 def login_user():
     while True:
-        username = ask_username(_("Username ({} is default, '.' for registration)".format(getpass.getuser())))
+        username = ask_username(
+            create_username_prompt(_("'.' for registration"))
+        )
         if username == '.':
             ask_register_user()
             continue
@@ -42,6 +48,6 @@ def login_user():
 
 user = login_user()
 while True:
-    action = input(_("{}?".format(user)))
+    action = input(_("{}> ".format(user)))
     if action and action in "Qq":
         break

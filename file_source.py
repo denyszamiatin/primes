@@ -35,8 +35,6 @@ class User:
         with open(User.USER_FILENAME, 'a') as user_file:
             fcntl.flock(user_file, fcntl.LOCK_EX)
             user_file.write(User.USER_PASSWORD_SEPARATOR.join([name, User.encrypt(password)]) + '\n')
-            time.sleep(100)
-            print(111)
 
     @staticmethod
     def validate_name(name):
