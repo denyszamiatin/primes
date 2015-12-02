@@ -14,40 +14,21 @@ def ask_password():
     return getpass.getpass(_("Password"))
 
 
-def create_username_prompt(message=''):
-    return _("Username ({} is default{})".format(getpass.getuser(), message))
-
-
-def ask_register_user():
-    while True:
-        username = ask_username(create_username_prompt())
-        password = ask_password()
-        try:
-            Session.register(username, password)
-            break
-        except PrimesError as error:
-            print(error)
+def ask_message():
+    return input(_("Message? "))
 
 
 def start_session():
     while True:
         username = ask_username(
-            create_username_prompt(_(", '.' for registration"))
+            _("Username ({} is default)".format(getpass.getuser()))
         )
-        if username == '.':
-            ask_register_user()
-            continue
         password = ask_password()
         try:
-            session = Session(username, password)
+            return Session(username, password)
             break
         except PrimesError as error:
             print(error)
-    return session
-
-
-def ask_message():
-    return input(_("Message? "))
 
 
 def ask_send_message(session):

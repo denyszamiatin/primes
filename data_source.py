@@ -16,18 +16,15 @@ class FileSource:
         os.chdir(self.DATABASE_DIR)
 
     def get_user_credentials(self, name):
-        try:
-            with open(self.USER_FILENAME, 'r') as user_file:
-                fcntl.flock(user_file, fcntl.LOCK_SH)
-                for line in user_file:
-                    username, password = line[:-1].split(
-                        self.SEPARATOR
-                    )
-                    if username == name:
-                        return username, password
-                raise ValueError
-        except (FileNotFoundError, ValueError):
-            raise
+        with open(self.USER_FILENAME, 'r') as user_file:
+            fcntl.flock(user_file, fcntl.LOCK_SH)
+            for line in user_file:
+                username, password = line[:-1].split(
+                    self.SEPARATOR
+                )
+                if username == name:
+                    return username, password
+            raise ValueError
 
     def add_user(self, name, password):
         self._append_to_file(
