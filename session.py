@@ -1,9 +1,9 @@
 # coding=utf-8
-import hashlib
 import datetime
+import hashlib
 from gettext import gettext as _
 
-from data_source import FileSource
+from data_sources import Source
 
 
 class PrimesError(Exception):
@@ -41,14 +41,14 @@ class Session:
 
     @staticmethod
     def register(name, password):
-        FileSource.add_user(name, Session.encrypt(password))
+        Source.add_user(name, Session.encrypt(password))
 
     def _get_username(self, username, password):
         try:
             self._validate_username(username)
             self._validate_password(password)
             username, encrypted_password = \
-                FileSource.get_user_credentials(username)
+                Source.get_user_credentials(username)
         except (FileNotFoundError, ValueError):
             self.register(username, password)
         except PrimesError:
@@ -61,7 +61,7 @@ class Session:
     def __init__(self, username, password):
         self.username = self._get_username(username, password)
         self.start_time = datetime.datetime.now()
-        self.data_source = FileSource(self.username)
+        self.data_source = Source(self.username)
 
     def __str__(self):
         return self.username

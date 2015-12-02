@@ -1,11 +1,12 @@
 # coding=utf-8
-import os
-import fcntl
 import datetime
+import fcntl
+import os
+
+from .abstract_source import AbstractSource
 
 
-class FileSource:
-    TIME_FORMAT = "%d.%m.%Y %H:%M"
+class FileSource(AbstractSource):
     DATABASE_DIR = 'data'
     USER_FILENAME = 'users.txt'
     SEPARATOR = '|'
@@ -40,7 +41,7 @@ class FileSource:
             file_for_append.write(FileSource.SEPARATOR.join(args) + '\n')
 
     def __init__(self, username):
-        self.username = username
+        super().__init__(username)
         self.file_size = self._get_user_file_size()
 
     def _get_user_file_size(self):
