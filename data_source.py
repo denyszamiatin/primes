@@ -10,41 +10,57 @@ class FileSource:
     USER_FILENAME = 'users.txt'
     SEPARATOR = '|'
 
-    def __init__(self):
-        if not os.path.isdir(self.DATABASE_DIR):
-            os.makedirs(self.DATABASE_DIR)
-        os.chdir(self.DATABASE_DIR)
+    if not os.path.isdir(DATABASE_DIR):
+        os.makedirs(DATABASE_DIR)
+    os.chdir(DATABASE_DIR)
 
-    def get_user_credentials(self, name):
-        with open(self.USER_FILENAME, 'r') as user_file:
-            fcntl.flock(user_file, fcntl.LOCK_SH)
-            for line in user_file:
-                username, password = line[:-1].split(
-                    self.SEPARATOR
-                )
-                if username == name:
-                    return username, password
-            raise ValueError
+    @staticmethod
+    def get_user_credentials(name):
+        for username, password in FileSource._reader(
+                FileSource.USER_FILENAME):
+            if username == name:
+                return username, password
+        raise ValueError
 
-    def add_user(self, name, password):
-        self._append_to_file(
-            self.USER_FILENAME,
-            self.SEPARATOR.join(
-                [name, password]
-            )
-        )
+    @staticmethod
+    def add_user(name, password):
+        FileSource._append_to_file(FileSource.USER_FILENAME, name, password)
 
-    def _append_to_file(self, filename, message):
+    @staticmethod
+    def _reader(filename):
+        with open(filename, 'r') as file_for_read:
+            fcntl.flock(file_for_read, fcntl.LOCK_SH)
+            for line in file_for_read:
+                yield line[:-1].split(FileSource.SEPARATOR)
+
+    @staticmethod
+    def _append_to_file(filename, *args):
         with open(filename, 'a') as file_for_append:
             fcntl.flock(file_for_append, fcntl.LOCK_EX)
-            file_for_append.write(message + '\n')
+            file_for_append.write(FileSource.SEPARATOR.join(args) + '\n')
 
-    def add_message(self, sender, receiver, message):
-        self._append_to_file(
+    def __init__(self, username):
+        self.username = username
+
+    @staticmethod
+    def add_message(sender, receiver, message):
+        FileSource._append_to_file(
             receiver,
-            self.SEPARATOR.join([
-                sender,
-                datetime.datetime.now().strftime(self.TIME_FORMAT),
-                message
-            ])
+            sender,
+            datetime.datetime.now().strftime(FileSource.TIME_FORMAT),
+            message
         )
+
+    @staticmethod
+    def get_unread_messages(receiver):
+        unread_messages = []
+        try:
+            for message in FileSource._reader(receiver):
+                if not message[0]:
+                    unread_messages = []
+                else:
+                    unread_messages.append(message)
+            if unread_messages:
+                FileSource._append_to_file(receiver, '')
+        finally:
+            return unread_messages

@@ -1,7 +1,6 @@
 # coding=utf-8
 import hashlib
-import fcntl
-import os
+import datetime
 from gettext import gettext as _
 
 from data_source import FileSource
@@ -14,7 +13,6 @@ class PrimesError(Exception):
 class Session:
     USERNAME_LENGTH = 3
     MESSAGE_LENGTH = 200
-    data_source = FileSource()
 
     @staticmethod
     def encrypt(password):
@@ -43,14 +41,14 @@ class Session:
 
     @staticmethod
     def register(name, password):
-        Session.data_source.add_user(name, Session.encrypt(password))
+        FileSource.add_user(name, Session.encrypt(password))
 
-    def __init__(self, username, password):
+    def _get_username(self, username, password):
         try:
             self._validate_username(username)
             self._validate_password(password)
             username, encrypted_password = \
-                self.data_source.get_user_credentials(username)
+                FileSource.get_user_credentials(username)
         except (FileNotFoundError, ValueError):
             self.register(username, password)
         except PrimesError:
@@ -58,7 +56,11 @@ class Session:
         else:
             if encrypted_password != Session.encrypt(password):
                 raise PrimesError(_('Invalid password'))
-        self.username = username
+        return username
+
+    def __init__(self, username, password):
+        self.username = self._get_username(username, password)
+        self.start_time = datetime.datetime.now()
 
     def __str__(self):
         return self.username
@@ -66,4 +68,7 @@ class Session:
     def send_message(self, receiver, message):
         Session._validate_username_len(receiver)
         Session._validate_message(message)
-        self.data_source.add_message(self.username, receiver, message)
+        FileSource.add_message(self.username, receiver, message)
+
+    def read_messages(self):
+        return FileSource.get_unread_messages(self.username)
