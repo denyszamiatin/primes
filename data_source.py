@@ -41,26 +41,32 @@ class FileSource:
 
     def __init__(self, username):
         self.username = username
+        self.file_size = self._get_user_file_size()
 
-    @staticmethod
-    def add_message(sender, receiver, message):
-        FileSource._append_to_file(
+    def _get_user_file_size(self):
+        return os.path.getsize(self.username)
+
+    def add_message(self, receiver, message):
+        self._append_to_file(
             receiver,
-            sender,
+            self.username,
             datetime.datetime.now().strftime(FileSource.TIME_FORMAT),
             message
         )
 
-    @staticmethod
-    def get_unread_messages(receiver):
+    def get_unread_messages(self):
         unread_messages = []
         try:
-            for message in FileSource._reader(receiver):
+            for message in self._reader(self.username):
                 if not message[0]:
                     unread_messages = []
                 else:
                     unread_messages.append(message)
             if unread_messages:
-                FileSource._append_to_file(receiver, '')
+                self._append_to_file(self.username, '')
+                self.file_size = self._get_user_file_size()
         finally:
             return unread_messages
+
+    def is_new_messages(self):
+        return self.file_size != self._get_user_file_size()

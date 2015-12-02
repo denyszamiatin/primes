@@ -61,6 +61,7 @@ class Session:
     def __init__(self, username, password):
         self.username = self._get_username(username, password)
         self.start_time = datetime.datetime.now()
+        self.data_source = FileSource(self.username)
 
     def __str__(self):
         return self.username
@@ -68,7 +69,10 @@ class Session:
     def send_message(self, receiver, message):
         Session._validate_username_len(receiver)
         Session._validate_message(message)
-        FileSource.add_message(self.username, receiver, message)
+        self.data_source.add_message(receiver, message)
 
     def read_messages(self):
-        return FileSource.get_unread_messages(self.username)
+        return self.data_source.get_unread_messages()
+
+    def new_messages(self):
+        return self.data_source.is_new_messages()
