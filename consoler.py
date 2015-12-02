@@ -29,10 +29,10 @@ def ask_register_user():
             print(error)
 
 
-def login_user():
+def start_session():
     while True:
         username = ask_username(
-            create_username_prompt(_("'.' for registration"))
+            create_username_prompt(_(", '.' for registration"))
         )
         if username == '.':
             ask_register_user()
@@ -50,17 +50,26 @@ def ask_message():
     return input(_("Message? "))
 
 
-def ask_send_message(user):
+def ask_send_message(session):
     receiver = ask_username(_('Receiver? '))
     message = ask_message()
     try:
-        user.send_message(receiver, message)
+        session.send_message(receiver, message)
     except PrimesError as error:
         print(error)
 
 
-user = login_user()
+def default(*args):
+    print(_("Invalid action"))
+
+session = start_session()
+
+actions = {
+    's': ask_send_message,
+}
+
 while True:
-    action = input(_("{}> ".format(user)))
+    action = input(_("{}> ".format(session)))
     if action and action in "Qq":
         break
+    actions.get(action, default)(session)
